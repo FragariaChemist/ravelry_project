@@ -1,3 +1,7 @@
+# Project files to ignore
+/data/rav_rec.csv
+/data/rav_rec.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
