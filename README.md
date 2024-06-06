@@ -3,12 +3,12 @@
 
 ## Contents
 ---
-* 01 - [Ravelry API Script]('../code/01_ravelry_api_script.ipynb')
-* 02 - [Data Cleaning]('../code/02_data_cleaning.ipynb')
-* 03 - [Recommender Model Code]('../code/03_rec_model_code.ipynb')
-* 04 - [Photo Collection Script]('../code/04_photo_collection_script.ipynb')
-* 05 - [Ravelry Image Code]('../code/05_ravelry_image_code.ipynb')
-* [Streamlit Application Code]('../code/app.py')
+* 01 - [Ravelry API Script]('/code/01_ravelry_api_script.ipynb')
+* 02 - [Data Cleaning]('/code/02_data_cleaning.ipynb')
+* 03 - [Recommender Model Code]('/code/03_rec_model_code.ipynb')
+* 04 - [Photo Collection Script]('/code/04_photo_collection_script.ipynb')
+* 05 - [Ravelry Image Code]('/code/05_ravelry_image_code.ipynb')
+* [Streamlit Application Code]('/code/app.py')
 
 
 ## Background
