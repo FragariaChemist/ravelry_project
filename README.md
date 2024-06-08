@@ -61,6 +61,10 @@ SpaCy was used as the natural language processor before modeling the data.
  * [SpaCy Tokens](https://spacy.io/api/token)
  * [Natural Language Processing With SpaCy in Python](https://realpython.com/natural-language-processing-spacy-python/#lemmatization)
 
+FuzzyWuzzy was used to account for user input typos and a method for making a best guess on which pattern a user might be looking for.
+
+[FuzzyWuzzy](https://pypi.org/project/fuzzywuzzy/)
+
 'gauge' and 'gauge_divisor' features were used create a new feature called 'gauge_per_inch'.  This feature is a normalized gauge value which is better for the recommender system over the previous two features.
 
 ## Feature Dictionary

@@ -1,7 +1,5 @@
 # Project files to ignore
 /data/rav_rec.csv
-/data/rav_rec.pkl
-/data/rav_rec_test.pkl
 *.pkl
 
 # Byte-compiled / optimized / DLL files
