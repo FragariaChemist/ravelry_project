@@ -15,7 +15,7 @@ st.write("")
 st.write("")
 st.write("")
 
-@st.cache_data # Read in the data once and only once
+@st.cache_data # Read in the data once and only once - from streamlit documentation
 def load_df(path):
     df = pd.read_csv(path, index_col = 'pattern_name')
     return df
@@ -36,18 +36,23 @@ if st.button('Submit'):
     fuzzy_process = process.extractOne(txt, choices)
     fuzzy_choice = fuzzy_process[0]
     matching_row = permalink_df[permalink_df['pattern_name'] == fuzzy_choice]
-    patt_link = matching_row['permalink'].iloc[0]
-    url_prefix = 'https://www.ravelry.com/patterns/library/'
-    st.write(f'We think you are looking for the pattern titled {fuzzy_choice}: {url_prefix}{patt_link}')
+    # For when FuzzyWuzzy just can't find anything in the permalink_df that matches what the user type
+    # For example 'power flower mittens'
+    if not matching_row.empty:
+        patt_link = matching_row['permalink'].iloc[0]
+        url_prefix = 'https://www.ravelry.com/patterns/library/'
+        st.write(f'We think you are looking for the pattern titled {fuzzy_choice}: {url_prefix}{patt_link}')
 
-    top_five = list(rav_rec_df[fuzzy_choice].sort_values().iloc[1:6].index)
+        top_five = list(rav_rec_df[fuzzy_choice].sort_values().iloc[1:6].index)
 
-    for patt in top_five:
-        top_matching_row = permalink_df[permalink_df['pattern_name'] == patt]
-        top_patt_link = top_matching_row['permalink'].iloc[0]
-        url = f'{patt}: {url_prefix}{top_patt_link}'  
-        st.write(url)
+        for patt in top_five:
+            top_matching_row = permalink_df[permalink_df['pattern_name'] == patt]
+            top_patt_link = top_matching_row['permalink'].iloc[0]
+            url = f'{patt}: {url_prefix}{top_patt_link}'  
+            st.write(url)
 
+    else:
+        st.write('No patterns found like this in our database.')
 
 st.write("")
 st.write("")

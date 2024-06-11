@@ -8,6 +8,7 @@
 * 03 - [Recommender Model Code](/code/03_rec_model_code.ipynb)
 * 04 - [Photo Collection Script](/code/04_photo_collection_script.ipynb)
 * 05 - [Ravelry Image Code](/code/05_ravelry_image_code.ipynb)
+* 06 - [Data Plots](/code/06_data_plots.ipynb)
 * [Streamlit Application Code](/code/app.py)
 
 
@@ -32,6 +33,8 @@ This project attempts to create a content-based recommendation system that sugge
 |**(garment)_details.csv**|*various*|Ravelry API|Dataframe of pattern ID, name, and URL to its medium photo. (Used for VGG16 neural network)
 |**rav_clean.csv**|*various*|Generated|Concatenated data from garment_details csvs that has been cleaned and all nulls removed.| 
 |**rav_rec.csv**|*cosine distance vectors*|Generated|Recommender database of all collected patterns.
+|**(garment)_photos.csv**|*str*|Ravelry API|Pattern names and link to its medium photo on Ravelry.
+|**permalink.csv**|*str*|Ravelry API|Pattern names and their specific permalink URL.
 
 
 ## Ravelry API Sources (Requires Ravelry Account)
@@ -41,12 +44,13 @@ This project attempts to create a content-based recommendation system that sugge
 
 ## Analysis
 ---
-A total of 6000 patterns were collected from the Ravelry database.  They consist of 2000 patterns from each of the following garment types:
+A total of 14998 patterns were collected from the Ravelry database.  They consist of 5000 patterns from each of the following garment types:
 * Beanies & Toques
 * Mid-calf Socks
-* Pullovers
 
-Ravelry stores patterns written from designers all around the world.  In an effort to not overwhelm the Ravelry API and to keep the project within scope, I chose to pull 2000 most popular patterns per garment type.  They were further filtered by knitting patterns written in English from the USA.  Discontinued patterns were excluded.
+4998 patterns consist of pullover patters. Two of the pullover patterns each had single unique yarn_weight values and were removed.
+
+Ravelry stores patterns written from designers all around the world.  In an effort to not overwhelm the Ravelry API and to keep the project within scope, I chose to pull 5000 most popular patterns per garment type.  They were further filtered by knitting patterns written in English from the USA.  Discontinued patterns were excluded.
 
 Null values were addressed as follows:
 * 'gauge' values were filled based on the 'yarn_weight' feature.  Yarn weight have typical gauges which is outlined by the [Craft Yarn Council](https://www.craftyarncouncil.com/standards/yarn-weight-system).
@@ -73,7 +77,7 @@ FuzzyWuzzy was used to account for user input typos and a method for making a be
 |---|---|---|
 |**author**|*string*|Author of knitting pattern
 |**difficulty_avg**|*float*|Average difficulty determined by Ravelry users based on rating 1-5 and 5 being the most difficult.
-|**max_yardage**|*float**|The maximum amount of yarn expected to be used to knit pattern if suggested yarn is used
+|**max_yardage**|*float*|The maximum amount of yarn expected to be used to knit pattern if suggested yarn is used
 |**notes**|*string*|Notes the designer can add to the pattern details
 |**pattern_price**|*float*|Price of pattern.  Will be 0 if pattern is free
 |**projects_count**|*int*|Count of projects using the pattern and logged as started by Ravelry users
@@ -101,8 +105,8 @@ I searched for recommendations using my system and the Musselburgh hat pattern. 
 |Hermione's Everyday Socks|4.7|2|Fingering|40897|13612|Erica Luedar
 |Turn A Square Hat|4.5|1|Worsted|20280|7239|Jared Flood
 |Monkey Socks|4.6|3|Fingering|23277|6087|Cookie A
-|Simple Skyp Socks|4.7|2|Sport|11863|5596|Adrienne Ku
 |Jaywalker Socks|4.3|3|Light Fingering|12389|3919|Grumperina
+|Simple Skyp Socks|4.7|2|Sport|11863|5596|Adrienne Ku
 
 The only pattern in which both my and Ravelry's recommender system suggested was Hermione's Everyday Socks. This was my first recommedation and Ravelry's second.  I think this is to be expected since Ravelry has its entire pattern database at its disposal.
 
