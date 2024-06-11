@@ -11,6 +11,9 @@
 * 06 - [Data Plots](/code/06_data_plots.ipynb)
 * [Streamlit Application Code](/code/app.py)
 
+The csv that is used to calculate recommendations is 4GB and too large to be included in the repo.  It can be found [here](https://drive.google.com/file/d/1G92wpsfgrKm6EapC49oRjfwR9yS94-vE/view?usp=drive_link)
+
+Recommender also uses permalink.csv to generate URL links to patterns and is included in this repo.
 
 ## Background
 ---
