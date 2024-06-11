@@ -31,9 +31,14 @@ st.write("")
 
 @st.cache_data # Read in the data once and only once - from streamlit documentation
 def load_df_from_aws(file):
-    obj = s3.get_object(Bucket = S3_BUCKET_NAME, Key = file)
+    obj = s3.get_object(Bucket=S3_BUCKET_NAME, Key=file)
     data = obj['Body'].read()
-    return pd.read_csv(BytesIO(data))
+    chunksize = 100000  # Adjust this value as needed
+    chunks = []
+    for chunk in pd.read_csv(BytesIO(data), chunksize=chunksize):
+        chunks.append(chunk)
+    df = pd.concat(chunks, ignore_index=True)
+    return df
 
 @st.cache_data
 def load_permalink_from_aws(file):
