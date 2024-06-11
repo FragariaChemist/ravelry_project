@@ -1,0 +1,5 @@
+[server]
+# Set the server timeout values as per your requirement
+server.maxMessageSize=50
+server.serverAddress="0.0.0.0"
+server.port=8501
