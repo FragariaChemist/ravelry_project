@@ -33,7 +33,7 @@ st.write("")
 def load_df_from_aws(file):
     obj = s3.get_object(Bucket=S3_BUCKET_NAME, Key=file)
     data = obj['Body'].read()
-    chunksize = 50000  # Adjust this value as needed
+    chunksize = 25000  # Adjust this value as needed
     chunks = []
     for chunk in pd.read_csv(BytesIO(data), chunksize=chunksize):
         chunks.append(chunk)
