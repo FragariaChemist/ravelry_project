@@ -27,6 +27,7 @@ This project attempts to create a content-based recommendation system that sugge
 
 ## Sources
 * [Ravelry Reveals! 79+ Statistics, Insights, Trends, Stats For 2023](https://knitlikegranny.com/ravelry-stats/)
+* [Ravelry API Documentation](https://www.ravelry.com/api)
 ---
 ## Dataset Dictionary
 ---
@@ -35,7 +36,7 @@ This project attempts to create a content-based recommendation system that sugge
 |**(garment)_details.csv**|*various*|Ravelry API|Multiple csvs containing data collected from Ravelry API.  Separated by garment type (beanie-toque, mid-calf, etc.).
 |**(garment)_details.csv**|*various*|Ravelry API|Dataframe of pattern ID, name, and URL to its medium photo. (Used for VGG16 neural network)
 |**rav_clean.csv**|*various*|Generated|Concatenated data from garment_details csvs that has been cleaned and all nulls removed.| 
-|**rav_rec.csv**|*cosine distance vectors*|Generated|Recommender database of all collected patterns.
+|**rav_rec.csv**|*cosine distance vectors*|Generated|Recommender database of all collected patterns.  Not included in repo due to large size.  Offsite link is [here](https://drive.google.com/file/d/1G92wpsfgrKm6EapC49oRjfwR9yS94-vE/view?usp=drive_link).
 |**(garment)_photos.csv**|*str*|Ravelry API|Pattern names and link to its medium photo on Ravelry.
 |**permalink.csv**|*str*|Ravelry API|Pattern names and their specific permalink URL.
 
@@ -123,7 +124,13 @@ I don't know how Ravelry structures its recommender system.  It may use or weigh
 ---
 Multiple patterns have the same name.  For example, there are 21 different 'Helga' patterns on Ravelry.  As I was testing the application, I found that patterns that share the same name with other patterns have a '-integer' appened to the end of the URL.  Helga patterns could look like 'helga-5' or 'helga-16' appended at the end of its URL.
 
-After investigating the issue, I discovered a 'permalink' attribute which is the unique string for every pattern.  I would like to integrate that into my API call and then use that to dynamically generate a URL for a pattern instead of my current method.
+After investigating the issue, I discovered a 'permalink' attribute which is the unique string for every pattern.  I updated the API script and recommender code to include this feature.
+
+Somehow compress the recommender dataframe so it's not so large.  I wanted to host this on a service like Streamlit, but it's unable to load the data.
+
+Integrate the data into a SQL database so that a user can query it. This would allow for a user to search for patterns directly by garmet type, author, etc.  This is how a Ravelery user typically searches for patterns on the website.  
+
+
 
 ## WIP Extra Model - Garmet Classifier Using Ravelry Images
 ---

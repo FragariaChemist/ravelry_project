@@ -3,6 +3,7 @@ import streamlit as st
 from fuzzywuzzy import fuzz 
 from fuzzywuzzy import process 
 
+# Website page setup
 st.set_page_config(
     page_title="Ravelry Knitting Pattern Recommender",
     page_icon="🧶",
@@ -24,13 +25,14 @@ def load_df(path):
 def load_permalink(path):
     df = pd.read_csv(path)
     return df
-    
+
+# Load the required data to run recommender
 rav_rec_df = load_df('../data/rav_rec.csv')
 permalink_df = load_permalink('../data/permalink.csv')
 
 txt = st.text_area(r"$\textsf{\large Enter a knitting pattern you like! We'll make a best guess based on your input.}$").strip()
 
-
+# Actual recommender function
 if st.button('Submit'):
     choices = rav_rec_df.columns
     fuzzy_process = process.extractOne(txt, choices)
@@ -54,6 +56,7 @@ if st.button('Submit'):
     else:
         st.write('No patterns found like this in our database.')
 
+# Notes about recommender
 st.write("")
 st.write("")
 st.write("")
