@@ -27,7 +27,6 @@ This project attempts to create a content-based recommendation system that sugge
 
 ## Sources
 * [Ravelry Reveals! 79+ Statistics, Insights, Trends, Stats For 2023](https://knitlikegranny.com/ravelry-stats/)
-* [Ravelry API Documentation](https://www.ravelry.com/api)
 ---
 ## Dataset Dictionary
 ---
