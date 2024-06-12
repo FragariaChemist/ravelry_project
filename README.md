@@ -1,5 +1,6 @@
 # 🧶 Ravely Knitting Pattern Recommender System Using Cosine Distances and SpaCy Natural Language Processing
 
+#### Click [here](https://youtu.be/VfF5s9c8_5I) to watch a video demonstration
 
 ## Contents
 ---
