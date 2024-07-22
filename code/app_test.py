@@ -26,6 +26,7 @@ s3 = boto2.client(
     's3',
     aws_access_key_id = aws_credentials['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key = aws_credentials['AWS_SECRET_ACCESS_KEY']
+)
 
 # Reading in data from AWS S3 bucket
 @st.cache_data # Read in the data once and only once - from streamlit documentation
