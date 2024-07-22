@@ -22,7 +22,7 @@ st.write("")
 aws_credentials = st.secrets['aws']
 
 # S3 Client
-s3 = boto2.client(
+s3 = boto3.client(
     's3',
     aws_access_key_id = aws_credentials['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key = aws_credentials['AWS_SECRET_ACCESS_KEY']
