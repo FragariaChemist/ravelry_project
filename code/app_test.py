@@ -4,9 +4,6 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import boto3
 from io import StringIO
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Website page setup
 st.set_page_config(
@@ -21,18 +18,25 @@ st.write("")
 st.write("")
 st.write("")
 
+# AWS Credentials
+aws_credentials = st.secrets['aws']
+
+# S3 Client
+s3 = boto2.client(
+    's3',
+    aws_access_key_id = aws_credentials['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key = aws_credentials['AWS_SECRET_ACCESS_KEY']
+
 # Reading in data from AWS S3 bucket
 @st.cache_data # Read in the data once and only once - from streamlit documentation
-def load_df(bucket, path):
-    s3 = boto3.client('s3')
-    obj = s3.get_object(Bucket = bucket, Key = path)
+def load_df(bucket, key):
+    obj = s3.get_object(Bucket = bucket, Key = key)
     df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')), index_col = 'pattern_name')
     return df
 
 @st.cache_data
-def load_permalink(bucket, path):
-    s3 = boto3.client('s3')
-    obj = s3.get_object(Bucket = bucket, Key = path)
+def load_permalink(bucket, key):
+    obj = s3.get_object(Bucket = bucket, Key = key)
     df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')))
     return df
 
