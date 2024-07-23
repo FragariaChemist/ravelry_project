@@ -4,6 +4,7 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 import boto3
 from io import StringIO
+import Levenshtein
 
 # Website page setup
 st.set_page_config(
