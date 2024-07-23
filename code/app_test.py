@@ -31,9 +31,12 @@ s3 = boto3.client(
 
 # Reading in data from AWS S3 bucket
 @st.cache_data # Read in the data once and only once - from streamlit documentation
-def load_df(bucket, key):
-    obj = s3.get_object(Bucket = bucket, Key = key)
-    df = pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')), index_col = 'pattern_name')
+def load_df(bucket, path, chunk_size = 10000):
+    s3 = boto3.client('s3')
+    obj = s3.get_object(Bucket = bucket, Key = path)
+    for chunk in pd.read_csv(StringIO(obj['Body'].read().decode('utf-8')), chunksize =    chunk_size, index_col = 'pattern_name'):
+        df_list.append(chunk)
+    df = pd.concat(df_list, index = True)
     return df
 
 @st.cache_data
