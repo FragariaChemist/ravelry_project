@@ -22,12 +22,9 @@ st.write("")
 # AWS Credentials
 aws_credentials = st.secrets['aws']
 
-st.write('AWS_ACCESS_KEY_ID:', aws_credentials['AWS_ACCESS_KEY_ID'])
-st.write('AWS_SECRET_ACCESS_KEY:', aws_credentials['AWS_SECRET_ACCESS_KEY'])
 
 # S3 Client
-s3 = boto3.client(
-    's3',
+session = boto3.Session(
     aws_access_key_id = aws_credentials['AWS_ACCESS_KEY_ID'],
     aws_secret_access_key = aws_credentials['AWS_SECRET_ACCESS_KEY']
 )
