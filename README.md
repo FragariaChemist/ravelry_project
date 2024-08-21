@@ -22,7 +22,7 @@ Recommender also uses permalink.csv to generate URL links to patterns and is inc
 
 ## Problem Statement
 ---
-Ravelry has a massive pattern database and over 11 milllion users as of 2023.  Choosing a new project can be daunting for fiber artists and lead to decision fatigue.  A recommender system which suggests similar patterns based previously enjoyed patterns can make the process more enjoyable.  Fiber artists would be more willing to purchase patterns when the process of selection isn't overwhelming.
+Ravelry has a massive pattern database and over 11 milllion users as of 2023.  Choosing a new project can be daunting for fiber artists and lead to decision fatigue.  A recommender system which suggests similar patterns based previously enjoyed patterns can make the process easier.  Fiber artists would be more willing to purchase patterns when the process of selection isn't overwhelming.
 
 This project attempts to create a content-based recommendation system that suggests five similar patterns to one that a user enters.  The user can click on the generated URL to go to the Ravelry pattern page for more details and download.
 
