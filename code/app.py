@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 from fuzzywuzzy import fuzz 
 from fuzzywuzzy import process 
+from pathlib import Path
 
 # Website page setup
 st.set_page_config(
@@ -27,8 +28,10 @@ def load_permalink(path):
     return df
 
 # Load the required data to run recommender
-rav_rec_df = load_df('../data/rav_rec.csv')
-permalink_df = load_permalink('../data/permalink.csv')
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / 'data'
+rav_rec_df = load_df(DATA_DIR / 'rav_rec.csv')
+permalink_df = load_permalink(DATA_DIR / 'permalink.csv')
 
 txt = st.text_area(r"$\textsf{\large Enter a knitting pattern you like! We'll make a best guess based on your input.}$").strip()
 
