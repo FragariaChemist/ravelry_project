@@ -44,6 +44,7 @@ def preprocess_notes(notes,nlp):
 
     return processed_notes
 
+
 def prepare_pattern_text(patterns, nlp):
     '''Create cleaned text features from the pattern notes'''
 
@@ -62,3 +63,32 @@ def prepare_pattern_text(patterns, nlp):
     ]
 
     return patterns
+
+
+def build_categorical_features(patterns):
+    '''One-hot encode categorical features'''
+
+    encoder = OneHotEncoder(
+        handle_unknown= 'ignore',
+        drop='first',
+        sparse_output=True,
+    )
+
+    categorical_matrix = encoder.fit_transform(
+        patterns[CATEGORICAL_FEATURES]
+    )
+
+    return categorical_matrix, encoder
+
+
+def build_numeric_features(patterns):
+    '''Standardize numeric pattern features'''
+
+    scaler = StandardScaler()
+
+    numeric_matrix = scaler.fit_transform(
+        patterns[NUMERICAL_FEATURES]
+    )
+
+    return numeric_matrix, scaler
+    
