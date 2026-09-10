@@ -15,7 +15,7 @@ from recommender import (
 
 
 # Settings
-TARGET_PATTERN = "Musselburgh"
+TARGET_PATTERN = "The Weekender"
 N_NEIGHBORS = 5
 
 
