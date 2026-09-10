@@ -4,7 +4,9 @@ import spacy
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.neighbors import NearestNeighbors
 from scipy.sparse import hstack
+import numpy as np
 
 
 CATEGORICAL_FEATURES = [
@@ -24,6 +26,11 @@ NUMERICAL_FEATURES = [
     'rating_avg',
 ]
 
+
+LOG_FEATURES = [
+    "projects_count",
+    "queued_projects_count",
+]
 
 def preprocess_notes(notes,nlp):
     '''Lemmetize pattern notes and remove stop words and non-word tokens'''
@@ -71,7 +78,6 @@ def build_categorical_features(patterns):
 
     encoder = OneHotEncoder(
         handle_unknown= 'ignore',
-        drop='first',
         sparse_output=True,
     )
 
@@ -82,13 +88,27 @@ def build_categorical_features(patterns):
     return categorical_matrix, encoder
 
 
+def prepare_numeric_features(patterns):
+    """Prepare numeric features before scaling."""
+
+    numeric_features = patterns[NUMERICAL_FEATURES].copy()
+
+    for feature in LOG_FEATURES:
+        numeric_features[feature] = np.log1p(
+            numeric_features[feature]
+        )
+
+    return numeric_features
+
 def build_numeric_features(patterns):
-    '''Standardize numeric pattern features'''
+    """Standardize numeric pattern features."""
+
+    numeric_features = prepare_numeric_features(patterns)
 
     scaler = StandardScaler()
 
     numeric_matrix = scaler.fit_transform(
-        patterns[NUMERICAL_FEATURES]
+        numeric_features
     )
 
     return numeric_matrix, scaler
@@ -123,3 +143,26 @@ def build_feature_matrix(patterns, nlp):
      ]).tocsr()
 
      return feature_matrix, encoder, scaler, vectorizer
+
+
+def build_neighbor_model(feature_matrix):
+     '''Fit a nearest-neighbor model using cosine distance'''
+
+     model = NearestNeighbors(
+          metric='cosine',
+          algorithm = 'brute',
+     )
+
+     model.fit(feature_matrix)
+
+     return model
+
+def find_neighbors(model, feature_matrix, pattern_index, n_neighbors=5):
+     '''Return the nearest pattern incides and their cosine distances'''
+
+     distances, indices = model.kneighbors(
+          feature_matrix[pattern_index],
+          n_neighbors=n_neighbors +1,
+     )
+
+     return distances[0][1:], indices[0][1:]
