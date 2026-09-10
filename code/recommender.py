@@ -4,6 +4,7 @@ import spacy
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from scipy.sparse import hstack
 
 
 CATEGORICAL_FEATURES = [
@@ -91,4 +92,34 @@ def build_numeric_features(patterns):
     )
 
     return numeric_matrix, scaler
-    
+
+def build_text_features(patterns):
+        '''Convert processed pattern notes into TF-IDF features'''
+
+        vectorizer = TfidfVectorizer(
+             max_features=3000,
+        )
+
+        test_matrix = vectorizer.fit_transform(
+             patterns['processed_text']
+        )
+
+        return test_matrix, vectorizer
+
+
+def build_feature_matrix(patterns, nlp):
+     '''Combine categorical, numeric, and text features'''
+
+     patterns = prepare_pattern_text(patterns, nlp)
+
+     categorical_matrix, encoder = build_categorical_features(patterns)
+     numeric_matrix, scaler = build_numeric_features(patterns)
+     text_matrix, vectorizer = build_text_features(patterns)
+
+     feature_matrix = hstack([
+         categorical_matrix,
+         numeric_matrix,
+         text_matrix,
+     ]).tocsr()
+
+     return feature_matrix, encoder, scaler, vectorizer
