@@ -7,5 +7,7 @@ spacy==3.8.16
 joblib==1.6.0
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.27.4
+requests==2.34.2
+python-dotenv==1.2.3
 
 en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl
