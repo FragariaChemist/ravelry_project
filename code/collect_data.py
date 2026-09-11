@@ -19,9 +19,25 @@ USERNAME = os.getenv("ravname")
 PASSWORD = os.getenv("password")
 
 
+# Ravelry API endpoints
 SEARCH_URL = "https://api.ravelry.com/patterns/search.json"
 DETAIL_URL = "https://api.ravelry.com/patterns.json"
 
+
+# Temporary test configuration.
+# After batching is verified, restore the real categories:
+#
+# PATTERN_CATEGORIES = {
+#     "beanie-toque": 5000,
+#     "mid-calf": 5000,
+#     "pullover": 5000,
+# }
+
+PATTERN_CATEGORIES = {
+    "beanie-toque": 5000,
+    "mid-calf": 5000,
+    "pullover": 5000,
+}
 
 def get_auth():
     """Create Ravelry API authentication."""
@@ -29,10 +45,14 @@ def get_auth():
     if not USERNAME or not PASSWORD:
         raise ValueError(
             "Ravelry API credentials were not found. "
-            "Make sure ravname and password are set in your .env file."
+            "Make sure ravname and password are set "
+            "in your .env file."
         )
 
-    return HTTPBasicAuth(USERNAME, PASSWORD)
+    return HTTPBasicAuth(
+        USERNAME,
+        PASSWORD,
+    )
 
 
 def unique_pattern_collection(category, total):
@@ -42,7 +62,8 @@ def unique_pattern_collection(category, total):
     Parameters
     ----------
     category : str
-        Ravelry pattern category, such as "socks" or "pullover".
+        Ravelry pattern category, such as
+        "beanie-toque", "mid-calf", or "pullover".
     total : int
         Number of unique patterns to collect.
 
@@ -84,7 +105,11 @@ def unique_pattern_collection(category, total):
         response.raise_for_status()
 
         rav_data = response.json()
-        patterns = rav_data.get("patterns", [])
+
+        patterns = rav_data.get(
+            "patterns",
+            [],
+        )
 
         if not patterns:
             break
@@ -145,6 +170,9 @@ def detail_collector(patterns):
     """
     Collect detailed information for Ravelry patterns.
 
+    Pattern IDs are requested in batches rather than
+    making one API request per pattern.
+
     Parameters
     ----------
     patterns : pandas.DataFrame
@@ -159,20 +187,33 @@ def detail_collector(patterns):
     auth = get_auth()
 
     pattern_ids = patterns["id"].tolist()
+
+    batch_size = 100
     raw_details = []
 
-    for number, pattern_id in enumerate(
-        pattern_ids,
-        start=1,
+    for start in range(
+        0,
+        len(pattern_ids),
+        batch_size,
     ):
 
-        params = {
-            "ids": pattern_id,
-        }
+        batch_ids = pattern_ids[
+            start:start + batch_size
+        ]
+
+        # Ravelry expects multiple IDs separated
+        # by literal plus signs.
+        id_string = "+".join(
+            str(pattern_id)
+            for pattern_id in batch_ids
+        )
+
+        detail_url = (
+            f"{DETAIL_URL}?ids={id_string}"
+        )
 
         response = requests.get(
-            DETAIL_URL,
-            params=params,
+            detail_url,
             auth=auth,
             timeout=30,
         )
@@ -181,26 +222,44 @@ def detail_collector(patterns):
 
         pattern_data = response.json()
 
-        pattern_detail = pattern_data.get(
+        returned_patterns = pattern_data.get(
             "patterns",
             {},
-        ).get(
-            str(pattern_id)
         )
 
-        if pattern_detail is not None:
-            raw_details.append(pattern_detail)
+        for pattern_id in batch_ids:
+
+            pattern_detail = returned_patterns.get(
+                str(pattern_id)
+            )
+
+            if pattern_detail is not None:
+                raw_details.append(
+                    pattern_detail
+                )
+
+        # Stop rather than silently creating an
+        # incomplete dataset.
+        if len(returned_patterns) != len(batch_ids):
+            raise ValueError(
+                f"Requested {len(batch_ids)} pattern details "
+                f"but Ravelry returned "
+                f"{len(returned_patterns)}."
+            )
 
         print(
             f"Collected details for "
-            f"{number} of {len(pattern_ids)} patterns..."
+            f"{min(start + batch_size, len(pattern_ids))} "
+            f"of {len(pattern_ids)} patterns..."
         )
 
     detail_rows = []
 
     for pattern in raw_details:
 
-        yarn_weight = pattern.get("yarn_weight")
+        yarn_weight = pattern.get(
+            "yarn_weight"
+        )
 
         if yarn_weight:
             yarn_weight_name = yarn_weight.get(
@@ -227,13 +286,17 @@ def detail_collector(patterns):
             {
                 "id": pattern.get("id"),
                 "name": pattern.get("name"),
-                "author": pattern_author.get("name"),
+                "author": pattern_author.get(
+                    "name"
+                ),
                 "difficulty_avg": (
                     round(difficulty, 2)
                     if difficulty is not None
                     else None
                 ),
-                "gauge": pattern.get("gauge"),
+                "gauge": pattern.get(
+                    "gauge"
+                ),
                 "gauge_divisor": pattern.get(
                     "gauge_divisor"
                 ),
@@ -243,8 +306,12 @@ def detail_collector(patterns):
                 "max_yardage": pattern.get(
                     "yardage_max"
                 ),
-                "notes": pattern.get("notes"),
-                "price": pattern.get("price"),
+                "notes": pattern.get(
+                    "notes"
+                ),
+                "price": pattern.get(
+                    "price"
+                ),
                 "projects_count": pattern.get(
                     "projects_count"
                 ),
@@ -266,12 +333,15 @@ def detail_collector(patterns):
             }
         )
 
-    return pd.DataFrame(detail_rows)
+    return pd.DataFrame(
+        detail_rows
+    )
 
 
 def data_collection_pipeline(category, total):
     """
-    Search Ravelry, collect pattern details, and save them.
+    Search Ravelry, collect pattern details,
+    and save them to a CSV file.
 
     Parameters
     ----------
@@ -296,11 +366,17 @@ def data_collection_pipeline(category, total):
         total,
     )
 
-    print("Collecting pattern details...")
+    print(
+        "Collecting pattern details..."
+    )
 
-    details = detail_collector(patterns)
+    details = detail_collector(
+        patterns
+    )
 
-    DATA_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(
+        exist_ok=True
+    )
 
     output_path = (
         DATA_DIR
@@ -316,16 +392,33 @@ def data_collection_pipeline(category, total):
         f"Saved {len(details)} patterns to:"
     )
 
-    print(output_path)
+    print(
+        output_path
+    )
 
     return details
 
 
-if __name__ == "__main__":
+def collect_all_pattern_data():
+    """
+    Collect every pattern category configured
+    in PATTERN_CATEGORIES.
+    """
 
-    # Small test run.
-    # We will change this after verifying the API code works.
-    data_collection_pipeline(
-        category="scarf",
-        total=5,
-    )
+    for category, total in PATTERN_CATEGORIES.items():
+
+        print()
+
+        print(
+            f"Starting collection for "
+            f"{category}..."
+        )
+
+        data_collection_pipeline(
+            category=category,
+            total=total,
+        )
+
+
+if __name__ == "__main__":
+    collect_all_pattern_data()
