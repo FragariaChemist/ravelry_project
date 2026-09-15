@@ -7,37 +7,44 @@ from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 
 
+# --------------------------------------------------
 # Project paths
+# --------------------------------------------------
+
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR / "data"
+REFRESH_DIR = DATA_DIR / "refresh"
 
 
-# Load Ravelry API credentials from .env
-load_dotenv()
+# --------------------------------------------------
+# Ravelry API credentials
+# --------------------------------------------------
+
+# Load the .env file from the project root.
+load_dotenv(PROJECT_DIR / ".env")
 
 USERNAME = os.getenv("ravname")
 PASSWORD = os.getenv("password")
 
 
+# --------------------------------------------------
 # Ravelry API endpoints
+# --------------------------------------------------
+
 SEARCH_URL = "https://api.ravelry.com/patterns/search.json"
 DETAIL_URL = "https://api.ravelry.com/patterns.json"
 
 
-# Temporary test configuration.
-# After batching is verified, restore the real categories:
-#
-# PATTERN_CATEGORIES = {
-#     "beanie-toque": 5000,
-#     "mid-calf": 5000,
-#     "pullover": 5000,
-# }
+# --------------------------------------------------
+# Pattern categories used by the recommender
+# --------------------------------------------------
 
 PATTERN_CATEGORIES = {
     "beanie-toque": 5000,
     "mid-calf": 5000,
     "pullover": 5000,
 }
+
 
 def get_auth():
     """Create Ravelry API authentication."""
@@ -111,6 +118,7 @@ def unique_pattern_collection(category, total):
             [],
         )
 
+        # Stop if Ravelry returns no more patterns.
         if not patterns:
             break
 
@@ -170,8 +178,8 @@ def detail_collector(patterns):
     """
     Collect detailed information for Ravelry patterns.
 
-    Pattern IDs are requested in batches rather than
-    making one API request per pattern.
+    Pattern IDs are requested in batches of 100
+    instead of making one API request per pattern.
 
     Parameters
     ----------
@@ -238,8 +246,8 @@ def detail_collector(patterns):
                     pattern_detail
                 )
 
-        # Stop rather than silently creating an
-        # incomplete dataset.
+        # Do not silently continue if Ravelry
+        # returns fewer patterns than requested.
         if len(returned_patterns) != len(batch_ids):
             raise ValueError(
                 f"Requested {len(batch_ids)} pattern details "
@@ -341,7 +349,7 @@ def detail_collector(patterns):
 def data_collection_pipeline(category, total):
     """
     Search Ravelry, collect pattern details,
-    and save them to a CSV file.
+    and save them to the refresh directory.
 
     Parameters
     ----------
@@ -356,6 +364,7 @@ def data_collection_pipeline(category, total):
         Detailed pattern data.
     """
 
+    print()
     print(
         f"Searching for {total} "
         f"{category} patterns..."
@@ -366,6 +375,12 @@ def data_collection_pipeline(category, total):
         total,
     )
 
+    if len(patterns) != total:
+        raise ValueError(
+            f"Requested {total} {category} patterns "
+            f"but search returned only {len(patterns)}."
+        )
+
     print(
         "Collecting pattern details..."
     )
@@ -374,12 +389,20 @@ def data_collection_pipeline(category, total):
         patterns
     )
 
-    DATA_DIR.mkdir(
-        exist_ok=True
+    if len(details) != total:
+        raise ValueError(
+            f"Expected {total} detailed {category} patterns "
+            f"but collected {len(details)}."
+        )
+
+    # Create data/refresh/ if it does not exist.
+    REFRESH_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
     output_path = (
-        DATA_DIR
+        REFRESH_DIR
         / f"{category}_details.csv"
     )
 
@@ -408,16 +431,32 @@ def collect_all_pattern_data():
     for category, total in PATTERN_CATEGORIES.items():
 
         print()
+        print(
+            "=" * 60
+        )
 
         print(
             f"Starting collection for "
             f"{category}..."
         )
 
+        print(
+            "=" * 60
+        )
+
         data_collection_pipeline(
             category=category,
             total=total,
         )
+
+    print()
+    print(
+        "All pattern categories collected successfully."
+    )
+
+    print(
+        f"Refresh data saved in: {REFRESH_DIR}"
+    )
 
 
 if __name__ == "__main__":

@@ -3,19 +3,38 @@ from pathlib import Path
 import pandas as pd
 
 
+# --------------------------------------------------
 # Project paths
+# --------------------------------------------------
+
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_DIR / "data"
+REFRESH_DIR = DATA_DIR / "refresh"
 
-HAT_PATH = DATA_DIR / "beanie-toque_details.csv"
-SOCK_PATH = DATA_DIR / "mid-calf_details.csv"
-PULLOVER_PATH = DATA_DIR / "pullover_details.csv"
 
-OUTPUT_PATH = DATA_DIR / "rav_clean.csv"
+# Read the newly refreshed raw data.
+HAT_PATH = REFRESH_DIR / "beanie-toque_details.csv"
+SOCK_PATH = REFRESH_DIR / "mid-calf_details.csv"
+PULLOVER_PATH = REFRESH_DIR / "pullover_details.csv"
+
+
+# Save the cleaned refreshed dataset separately
+# from the original known-good rav_clean.csv.
+OUTPUT_PATH = REFRESH_DIR / "rav_clean.csv"
+
+
+# --------------------------------------------------
+# Yarn-weight cleaning rules
+# --------------------------------------------------
+
+YARN_WEIGHT_REPLACEMENTS = {
+    "Aran / Worsted": "Worsted",
+    "DK / Sport": "DK",
+}
 
 
 # Typical gauge per four inches for each yarn weight.
-# These values come from the cleaning logic in the original project.
+# These values come from the original project.
 YARN_WEIGHT_GAUGE = {
     "Worsted": 20,
     "DK": 22,
@@ -32,8 +51,18 @@ YARN_WEIGHT_GAUGE = {
 }
 
 
-# Average maximum yardage from the original project dataset.
-# Yardage depends on both yarn weight and garment type.
+# --------------------------------------------------
+# Yardage cleaning rules
+# --------------------------------------------------
+
+# Minimum number of known yardage values required
+# before we trust the current dataset's group mean.
+MIN_YARDAGE_GROUP_COUNT = 10
+
+
+# Fallback yardage values from the original project.
+# These are used only when the current dataset has
+# too few examples for a reliable yarn-weight/type mean.
 YARN_WEIGHT_YARDAGE = {
     "Worsted": {
         "hat": 213.0,
@@ -101,9 +130,17 @@ YARN_WEIGHT_YARDAGE = {
 def load_pattern_data():
     """Load the three raw garment datasets."""
 
-    hats = pd.read_csv(HAT_PATH)
-    socks = pd.read_csv(SOCK_PATH)
-    pullovers = pd.read_csv(PULLOVER_PATH)
+    hats = pd.read_csv(
+        HAT_PATH
+    )
+
+    socks = pd.read_csv(
+        SOCK_PATH
+    )
+
+    pullovers = pd.read_csv(
+        PULLOVER_PATH
+    )
 
     return hats, socks, pullovers
 
@@ -129,30 +166,26 @@ def clean_yarn_weights(hats, socks, pullovers):
     socks = socks.copy()
     pullovers = pullovers.copy()
 
-    hats["yarn_weight"] = hats["yarn_weight"].replace(
-        {
-            "Aran / Worsted": "Worsted",
-        }
+    hats["yarn_weight"] = hats[
+        "yarn_weight"
+    ].replace(
+        YARN_WEIGHT_REPLACEMENTS
     )
 
-    socks["yarn_weight"] = socks["yarn_weight"].replace(
-        {
-            "Aran / Worsted": "Worsted",
-        }
+    socks["yarn_weight"] = socks[
+        "yarn_weight"
+    ].replace(
+        YARN_WEIGHT_REPLACEMENTS
     )
 
     pullovers["yarn_weight"] = pullovers[
         "yarn_weight"
     ].replace(
-        {
-            "Aran / Worsted": "Worsted",
-            "DK / Sport": "DK",
-        }
+        YARN_WEIGHT_REPLACEMENTS
     )
 
-    # The original dataset had one Thread pullover
-    # and one Cobweb pullover. They were removed
-    # because those yarn weights were unique.
+    # Remove yarn weights that occur too rarely
+    # to be useful to the recommender.
     pullovers = pullovers[
         ~pullovers["yarn_weight"].isin(
             [
@@ -196,9 +229,13 @@ def drop_unused_columns(patterns):
 
 
 def gauge_calculator(row):
-    """Fill a missing gauge using the pattern's yarn weight."""
+    """
+    Fill a missing gauge using the pattern's
+    yarn weight.
+    """
 
     if pd.isna(row["gauge"]):
+
         return YARN_WEIGHT_GAUGE.get(
             row["yarn_weight"]
         )
@@ -206,34 +243,95 @@ def gauge_calculator(row):
     return row["gauge"]
 
 
-def yardage_calculator(row):
+def build_yardage_stats(patterns):
     """
-    Fill missing maximum yardage using yarn weight
-    and garment type.
+    Calculate current yardage averages and counts
+    for each yarn-weight and garment-type combination.
     """
 
-    if pd.isna(row["max_yardage"]):
+    yardage_stats = patterns.groupby(
+        [
+            "yarn_weight",
+            "type",
+        ]
+    )["max_yardage"].agg(
+        [
+            "count",
+            "mean",
+        ]
+    )
 
-        yarn_weight = row["yarn_weight"]
-        pattern_type = row["type"]
+    return yardage_stats
 
-        return YARN_WEIGHT_YARDAGE.get(
-            yarn_weight,
-            {},
-        ).get(
-            pattern_type
-        )
 
-    return row["max_yardage"]
+def yardage_calculator(row, yardage_stats):
+    """
+    Fill missing maximum yardage using the current
+    dataset when enough examples are available.
+
+    Fall back to the original project averages for
+    groups with too few observations.
+    """
+
+    # If the pattern already has a yardage,
+    # keep the original value.
+    if not pd.isna(
+        row["max_yardage"]
+    ):
+        return row["max_yardage"]
+
+    yarn_weight = row[
+        "yarn_weight"
+    ]
+
+    pattern_type = row[
+        "type"
+    ]
+
+    group = (
+        yarn_weight,
+        pattern_type,
+    )
+
+    # Use the current dataset mean if the group
+    # contains enough known yardage values.
+    if group in yardage_stats.index:
+
+        stats = yardage_stats.loc[
+            group
+        ]
+
+        if (
+            stats["count"]
+            >= MIN_YARDAGE_GROUP_COUNT
+        ):
+            return stats["mean"]
+
+    # Otherwise use the original project's
+    # fallback value.
+    return YARN_WEIGHT_YARDAGE.get(
+        yarn_weight,
+        {},
+    ).get(
+        pattern_type
+    )
 
 
 def fill_missing_values(patterns):
-    """Fill null values using the original project rules."""
+    """Fill null values using the project cleaning rules."""
 
     patterns = patterns.copy()
 
+    # Build yardage statistics from the current dataset.
+    yardage_stats = build_yardage_stats(
+        patterns
+    )
+
     patterns["max_yardage"] = patterns.apply(
-        yardage_calculator,
+        lambda row: yardage_calculator(
+            row,
+            yardage_stats,
+        ),
         axis=1,
     )
 
@@ -269,13 +367,17 @@ def add_gauge_per_inch(patterns):
 def clean_pattern_data():
     """Run the complete pattern-cleaning pipeline."""
 
-    print("Loading garment datasets...")
+    print(
+        "Loading garment datasets..."
+    )
 
     hats, socks, pullovers = load_pattern_data()
 
     print(
         "Raw rows:",
-        len(hats) + len(socks) + len(pullovers),
+        len(hats)
+        + len(socks)
+        + len(pullovers),
     )
 
     hats, socks, pullovers = add_pattern_types(
@@ -308,6 +410,8 @@ def clean_pattern_data():
         patterns
     )
 
+    # Verify that cleaning did not leave
+    # unexpected missing values behind.
     remaining_nulls = patterns.isna().sum()
 
     remaining_nulls = remaining_nulls[
@@ -315,11 +419,18 @@ def clean_pattern_data():
     ]
 
     if not remaining_nulls.empty:
-        print("\nWarning: null values remain:")
-        print(remaining_nulls)
+
+        print(
+            "\nWarning: null values remain:"
+        )
+
+        print(
+            remaining_nulls
+        )
 
         raise ValueError(
-            "Cleaning finished with null values remaining."
+            "Cleaning finished with "
+            "null values remaining."
         )
 
     patterns.to_csv(
@@ -332,7 +443,8 @@ def clean_pattern_data():
     )
 
     print(
-        f"Saved cleaned data to: {OUTPUT_PATH}"
+        f"Saved cleaned data to: "
+        f"{OUTPUT_PATH}"
     )
 
     return patterns
