@@ -15,14 +15,23 @@ from recommender import (
 
 
 # Settings
-TARGET_PATTERN = "The Weekender"
+TARGET_PATTERN = "Classic Ribbed Hat"
 N_NEIGHBORS = 5
 
 
 # File locations
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-DATA_PATH = PROJECT_DIR / "data" / "rav_clean.csv"
-ARTIFACT_DIR = PROJECT_DIR / "artifacts"
+
+DATA_PATH = (
+    PROJECT_DIR
+    / "data"
+    / "rav_clean.csv"
+)
+
+ARTIFACT_DIR = (
+    PROJECT_DIR
+    / "artifacts"
+)
 
 
 # Load data
