@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 import time
 
@@ -15,8 +16,15 @@ from recommender import (
 
 
 # Settings
-TARGET_PATTERN = "Classic Ribbed Hat"
 N_NEIGHBORS = 5
+
+if len(sys.argv) < 2:
+    raise ValueError(
+        "Please provide a pattern name. "
+        'Example: python .\\code\\check_recommender.py "The Weekender"'
+    )
+
+TARGET_PATTERN = sys.argv[1]
 
 
 # File locations
